@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import http from 'http';
 import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
@@ -15,7 +16,7 @@ import {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = Number(process.env.PORT) || 6869;
 
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
@@ -198,6 +199,9 @@ async function postInput(body = {}, existingId) {
 }
 
 /* ---------- public: auth ---------- */
+
+// Health check — also lets setup.js recognise an old copy of this backend still holding the port.
+app.get('/api/health', (_req, res) => res.json({ ok: true, app: 'miss-india-backend', pid: process.pid }));
 
 app.post('/api/auth/login', login);
 app.get('/api/auth/me', requireAdmin, (req, res) => res.json({ username: req.admin.sub }));
@@ -606,7 +610,10 @@ function box(lines) {
 console.log(dim('\n⏳ Connecting to MySQL…'));
 initDb()
   .then((db) => {
-    const server = app.listen(PORT, () => {
+    // Plain http server: Express 5 also calls the listen callback on errors, so print only on "listening".
+    const server = http.createServer(app);
+    server.listen(PORT);
+    server.on('listening', () => {
       const rows = Object.entries(db.counts).map(([t, n]) => `${t} ${bold(String(n))}`).join(dim('  ·  '));
       console.log(`\n${box([
         gold(bold('👑  MR. MISS. & MRS. INDIA 2026 — BACKEND')),
@@ -626,8 +633,8 @@ initDb()
     });
     server.on('error', (err) => {
       if (err.code === 'EADDRINUSE') {
-        console.error(`\n✗ Port ${PORT} is already in use — the backend is probably already running in another terminal.`);
-        console.error('  Close that terminal (Ctrl + C) or set a different PORT in Backend/.env.\n');
+        console.error(`\n✗ Port ${PORT} is already in use.`);
+        console.error('  Stop with Ctrl + C and run  npm run dev  again — it frees the port from an old backend automatically.\n');
       } else {
         console.error('\n✗ Server failed to start:', err.message, '\n');
       }

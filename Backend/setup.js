@@ -4,6 +4,8 @@
 //    verifies it, saves it to .env and creates the database + tables.
 import crypto from 'crypto';
 import fs from 'fs';
+import net from 'net';
+import { execSync } from 'child_process';
 import path from 'path';
 import readline from 'readline';
 import { fileURLToPath } from 'url';
@@ -103,7 +105,7 @@ async function main() {
     try {
       await tryLogin(env);
       console.log(`✓ MySQL login OK (${env.DB_USER || 'root'}@${env.DB_HOST || 'localhost'}) — database "${env.DB_NAME || 'miss_india'}" ready`);
-      return;
+      break;
     } catch (err) {
       if (err.code === 'ECONNREFUSED') {
         console.error('\n✗ MySQL is not running on', `${env.DB_HOST || 'localhost'}:${env.DB_PORT || 3306}`);
@@ -133,7 +135,63 @@ async function main() {
   }
 }
 
-main().catch((err) => {
+/* ---------- make sure the API port is free ---------- */
+
+const portFree = (port) => new Promise((resolve) => {
+  const srv = net.createServer();
+  srv.once('error', () => resolve(false));
+  srv.once('listening', () => srv.close(() => resolve(true)));
+  srv.listen(port);
+});
+
+// Which program is listening on the port (Windows: netstat + tasklist, elsewhere: lsof). Best effort.
+function whoHas(port) {
+  try {
+    if (process.platform === 'win32') {
+      const line = execSync('netstat -ano -p tcp', { encoding: 'utf8' })
+        .split(/\r?\n/)
+        .find((l) => new RegExp(`:${port}\\s.*LISTENING`).test(l));
+      const pid = line?.trim().split(/\s+/).pop();
+      if (!pid) return null;
+      const name = execSync(`tasklist /FI "PID eq ${pid}" /FO CSV /NH`, { encoding: 'utf8' }).split(',')[0]?.replace(/"/g, '');
+      return { pid, name };
+    }
+    const pid = execSync(`lsof -ti tcp:${port} -sTCP:LISTEN`, { encoding: 'utf8' }).trim().split('\n')[0];
+    return pid ? { pid, name: '' } : null;
+  } catch {
+    return null;
+  }
+}
+
+async function freePort(port) {
+  if (await portFree(port)) return;
+
+  // Is it an old copy of THIS backend (e.g. a terminal left running)? Then stop it and take over.
+  let health = null;
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/api/health`, { signal: AbortSignal.timeout(2000) });
+    health = await res.json();
+  } catch { /* another program, or not answering */ }
+
+  if (health?.app === 'miss-india-backend' && health.pid) {
+    try { process.kill(health.pid); } catch { /* already gone */ }
+    for (let i = 0; i < 20 && !(await portFree(port)); i++) await new Promise((r) => setTimeout(r, 250));
+    if (await portFree(port)) {
+      console.log(`↻ An old Miss India backend was still running on port ${port} (PID ${health.pid}) — stopped it.`);
+      return;
+    }
+  }
+
+  const who = whoHas(port);
+  console.error(`\n✗ Port ${port} is used by another program${who ? ` — ${who.name || 'process'} (PID ${who.pid})` : ''}.`);
+  if (who) console.error(`  Stop it with:  ${process.platform === 'win32' ? `taskkill /PID ${who.pid} /F` : `kill ${who.pid}`}`);
+  console.error('  …or choose another PORT in Backend/.env (the frontend picks it up automatically).\n');
+  process.exit(1);
+}
+
+main()
+  .then(() => freePort(Number(readEnv().values.PORT) || 6869))
+  .catch((err) => {
   console.error('✗ Setup failed:', err.message);
   process.exit(1);
 });

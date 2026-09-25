@@ -14,7 +14,7 @@ Backend/    Express API + MySQL
    ```bash
    cd Backend
    npm install
-   npm run dev              # http://localhost:5000
+   npm run dev              # http://localhost:6869
    ```
    The first `npm run dev` creates `Backend/.env` (with a random admin password it prints once),
    asks for your MySQL user/password (hidden input), saves them, and creates the `miss_india`
