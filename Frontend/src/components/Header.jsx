@@ -14,6 +14,7 @@ const NAV = [
   { to: '/certificate', label: 'Certificate' },
   { to: '/id-card', label: 'ID Card' },
   { to: '/contact', label: 'Contact' },
+  { to: '/business-awards', label: 'Awards' },
 ];
 
 export default function Header() {

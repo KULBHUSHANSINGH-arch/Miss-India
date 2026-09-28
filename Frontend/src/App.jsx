@@ -7,6 +7,7 @@ import { RegistrationProvider } from './components/RegistrationContext.jsx';
 import Home from './pages/Home.jsx';
 import About from './pages/About.jsx';
 import EventPage from './pages/Event.jsx';
+import BusinessAwards from './pages/BusinessAwards.jsx';
 import Gallery from './pages/Gallery.jsx';
 import Blog from './pages/Blog.jsx';
 import BlogPost from './pages/BlogPost.jsx';
@@ -53,6 +54,7 @@ export default function App() {
           <Route index element={<Home />} />
           <Route path="about" element={<About />} />
           <Route path="event" element={<EventPage />} />
+          <Route path="business-awards" element={<BusinessAwards />} />
           <Route path="gallery" element={<Gallery />} />
           <Route path="blog" element={<Blog />} />
           <Route path="blog/:slug" element={<BlogPost />} />
