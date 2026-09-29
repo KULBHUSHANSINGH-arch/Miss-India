@@ -1,0 +1,17 @@
+# Public uploads (ID-card photos, team photos, blog media). Files only — never run scripts from here.
+Options -Indexes
+
+<FilesMatch "\.(php\d*|phtml|phar|phps|pl|py|cgi|sh|shtml)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+<IfModule mod_headers.c>
+  Header set Cache-Control "public, max-age=604800"
+  Header set X-Content-Type-Options "nosniff"
+</IfModule>

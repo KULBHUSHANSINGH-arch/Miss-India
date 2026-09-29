@@ -3,8 +3,9 @@
 Event website + admin panel for Global India's Biggest Beauty Pageant.
 
 ```
-Frontend/   React + Vite website and admin panel
-Backend/    Express API + MySQL
+Frontend/     React + Vite website and admin panel
+Backend/      Express API + MySQL
+Backend-PHP/  Same API in PHP + MySQL, for shared hosting (Hostinger Premium) — see Backend-PHP/HOSTINGER.md
 ```
 
 ## Setup

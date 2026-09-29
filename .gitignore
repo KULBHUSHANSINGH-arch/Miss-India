@@ -5,3 +5,14 @@ Backend/uploads/
 Backend/private_uploads/
 Backend/data/
 *.log
+
+# PHP backend (Backend-PHP) — runtime data and the Hostinger upload package
+.env.production
+Backend-PHP/uploads/*
+!Backend-PHP/uploads/.htaccess
+Backend-PHP/server/private_uploads/*
+!Backend-PHP/server/private_uploads/.htaccess
+!Backend-PHP/server/private_uploads/.gitkeep
+Backend-PHP/server/data/*
+!Backend-PHP/server/data/.gitkeep
+hostinger/

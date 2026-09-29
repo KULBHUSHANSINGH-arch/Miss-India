@@ -1,0 +1,10 @@
+{
+  "name": "miss-india-php-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PHP + MySQL backend for Hostinger shared hosting (same API as Backend/).",
+  "scripts": {
+    "dev": "php -d upload_max_filesize=200M -d post_max_size=210M -d memory_limit=256M -S localhost:6869 router.php",
+    "package": "node scripts/package-hostinger.mjs"
+  }
+}
